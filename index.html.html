@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCB105 — Week 6: How do I live on platforms?</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F2EC;
+    --ink: #1a1a18;
+    --ink-mid: #4a4a44;
+    --ink-light: #8a8a82;
+    --ink-faint: #c8c8be;
+    --accent: #2D5F3F;
+    --accent-light: #E8F2EC;
+    --accent-mid: #4a9465;
+    --warn: #8B3A0F;
+    --warn-light: #FBF0EB;
+    --info: #1a3a5c;
+    --info-light: #EAF0F7;
+    --border: rgba(26,26,24,0.12);
+    --border-mid: rgba(26,26,24,0.22);
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0;
+  }
+  .page-shell {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+  .unit-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 0.5rem;
+  }
+  .page-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(26px, 4vw, 36px);
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 0.75rem;
+  }
+  .page-title em { font-style: italic; color: var(--accent); }
+  .page-intro {
+    font-size: 15px;
+    color: var(--ink-mid);
+    line-height: 1.7;
+    max-width: 580px;
+    margin-bottom: 1.75rem;
+    font-weight: 300;
+  }
+  .divider {
+    border: none;
+    border-top: 0.5px solid var(--border);
+    margin: 1.75rem 0;
+  }
+
+  /* Tab navigation */
+  .tab-nav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 1.75rem;
+    border-bottom: 0.5px solid var(--border);
+    padding-bottom: 0;
+  }
+  .tab-btn {
+    padding: 8px 16px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--ink-light);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -0.5px;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+  .activity-label {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--accent-light);
+    color: var(--accent);
+    margin-bottom: 0.85rem;
+  }
+  .activity-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+    line-height: 1.2;
+  }
+  .activity-desc {
+    font-size: 14px;
+    color: var(--ink-mid);
+    line-height: 1.7;
+    margin-bottom: 1.25rem;
+    font-weight: 300;
+    max-width: 560px;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ---- Activity 1: Drag Map ---- */
+  .tray-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 0.6rem;
+  }
+  .tray {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    padding: 0.85rem;
+    background: white;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    min-height: 56px;
+    margin-bottom: 1rem;
+  }
+  .map-container {
+    position: relative;
+    width: 100%;
+    padding-top: 68%;
+    border: 0.5px solid var(--border-mid);
+    border-radius: var(--radius-lg);
+    background: white;
+    overflow: hidden;
+    margin-bottom: 0.85rem;
+    min-height: 320px;
+  }
+  .map-inner {
+    position: absolute;
+    inset: 0;
+  }
+  .axis-line-h {
+    position: absolute;
+    top: 50%; left: 8%; right: 8%;
+    height: 0.5px;
+    background: var(--border-mid);
+  }
+  .axis-line-v {
+    position: absolute;
+    left: 50%; top: 8%; bottom: 8%;
+    width: 0.5px;
+    background: var(--border-mid);
+  }
+  .ax-label {
+    position: absolute;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ink-faint);
+    pointer-events: none;
+  }
+  .ax-label.left  { left: 10px; top: 50%; transform: translateY(-50%); }
+  .ax-label.right { right: 10px; top: 50%; transform: translateY(-50%); text-align: right; }
+  .ax-label.top   { top: 10px; left: 50%; transform: translateX(-50%); text-align: center; white-space: nowrap; }
+  .ax-label.bottom{ bottom: 10px; left: 50%; transform: translateX(-50%); text-align: center; white-space: nowrap; }
+  .quad-hint {
+    position: absolute;
+    font-size: 9.5px;
+    color: var(--ink-faint);
+    font-style: italic;
+    line-height: 1.4;
+    pointer-events: none;
+  }
+  .chip {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: grab;
+    user-select: none;
+    white-space: nowrap;
+    border: 0.5px solid;
+    transition: opacity 0.15s;
+  }
+  .chip:active { cursor: grabbing; }
+  .chip.on-map {
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+  .insight-panel {
+    background: var(--accent-light);
+    border: 0.5px solid rgba(45,95,63,0.2);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    margin-top: 0.75rem;
+    display: none;
+  }
+  .insight-panel.show { display: block; }
+  .insight-panel h4 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .insight-panel p {
+    font-size: 13px;
+    color: #2a4a35;
+    line-height: 1.65;
+    margin-bottom: 0.6rem;
+  }
+  .insight-panel p:last-child { margin-bottom: 0; }
+
+  /* ---- Activity 2: Sliders ---- */
+  .slider-block { margin-bottom: 1.1rem; }
+  .slider-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+  }
+  .slider-name { font-size: 14px; font-weight: 500; color: var(--ink); }
+  .slider-val { font-size: 12px; color: var(--ink-light); }
+  input[type=range] {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid white;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 1.25rem 0 1rem;
+  }
+  .stat-card {
+    background: white;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .stat-lbl { font-size: 11px; color: var(--ink-light); margin-top: 4px; }
+  .audit-insight {
+    background: white;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    margin-top: 0.5rem;
+  }
+  .audit-insight h4 { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 0.4rem; }
+  .audit-insight p { font-size: 13px; color: var(--ink-mid); line-height: 1.65; }
+
+  /* ---- Activity 3: Checks ---- */
+  .check-section { margin-bottom: 1.5rem; }
+  .check-section-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 0.6rem;
+  }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 12px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    background: white;
+    margin-bottom: 6px;
+    transition: all 0.15s;
+  }
+  .check-item:hover { border-color: var(--border-mid); background: var(--cream); }
+  .check-item.on { background: var(--accent-light); border-color: rgba(45,95,63,0.3); }
+  .check-item.on .check-text { color: var(--accent); }
+  .check-box {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    border: 0.5px solid var(--border-mid);
+    border-radius: 3px;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+  }
+  .check-item.on .check-box { background: var(--accent); border-color: var(--accent); }
+  .check-item.on .check-box::after {
+    content: '';
+    width: 8px;
+    height: 5px;
+    border-left: 1.5px solid white;
+    border-bottom: 1.5px solid white;
+    transform: rotate(-45deg) translate(1px, -1px);
+    display: block;
+  }
+  .check-text { font-size: 13px; color: var(--ink-mid); line-height: 1.5; }
+  .gen-btn {
+    display: inline-block;
+    padding: 10px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: opacity 0.15s;
+    margin-top: 0.5rem;
+  }
+  .gen-btn:hover { opacity: 0.88; }
+  .profile-result {
+    margin-top: 1.25rem;
+    background: white;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    display: none;
+  }
+  .profile-result.show { display: block; }
+  .profile-type {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.35rem;
+  }
+  .profile-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--ink);
+    margin-bottom: 0.65rem;
+  }
+  .profile-body { font-size: 13px; color: var(--ink-mid); line-height: 1.7; margin-bottom: 0.6rem; }
+  .profile-connect {
+    font-size: 13px;
+    color: var(--info);
+    line-height: 1.65;
+    padding: 0.75rem 1rem;
+    background: var(--info-light);
+    border-radius: var(--radius);
+    border-left: 2px solid var(--info);
+  }
+
+  /* Next btn */
+  .next-btn {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 8px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    background: transparent;
+    border: 0.5px solid rgba(45,95,63,0.4);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .next-btn:hover { background: var(--accent-light); }
+
+  @media (max-width: 520px) {
+    .page-shell { padding: 1.25rem 1rem 3rem; }
+    .stats-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .tab-btn { font-size: 12px; padding: 7px 11px 9px; }
+  }
+</style>
+</head>
+<body>
+<div class="page-shell">
+
+  <p class="unit-eyebrow">CCB105 Digital Platforms — Week 6 · Asynchronous activity</p>
+  <h1 class="page-title">How do I <em>actually</em> live on platforms?</h1>
+  <p class="page-intro">Three short activities — no essays, no right answers, nothing to submit. Drag, slide, and tap your way to a clearer picture of your own platform behaviour. The whole thing takes about 10–15 minutes.</p>
+
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab(0)">1 · Platform map</button>
+    <button class="tab-btn" onclick="switchTab(1)">2 · Time audit</button>
+    <button class="tab-btn" onclick="switchTab(2)">3 · Who am I online?</button>
+  </nav>
+
+  <!-- ===== ACTIVITY 1 ===== -->
+  <div id="screen0" class="screen active">
+    <span class="activity-label">Activity 1 of 3</span>
+    <h2 class="activity-title">Your platform map</h2>
+    <p class="activity-desc">Drag each platform onto the map. The horizontal axis is about <strong style="font-weight:500">why</strong> you use it (personal vs institutional). The vertical axis is about <strong style="font-weight:500">how</strong> you show up (Resident — you leave a trace, vs Visitor — you come and go). Inspired by David White's V&R mapping framework.</p>
+
+    <p class="tray-label">Platforms — drag onto the map below</p>
+    <div class="tray" id="tray"></div>
+
+    <div class="map-container" id="mapArea">
+      <div class="map-inner">
+        <div class="axis-line-h"></div>
+        <div class="axis-line-v"></div>
+        <span class="ax-label left">Personal</span>
+        <span class="ax-label right">Institutional</span>
+        <span class="ax-label top">Resident (I leave a trace)</span>
+        <span class="ax-label bottom">Visitor (I come and go)</span>
+        <span class="quad-hint" style="left:10px;top:30px">You post, connect,<br>build identity here</span>
+        <span class="quad-hint" style="right:10px;top:30px;text-align:right">You engage for<br>work or study</span>
+        <span class="quad-hint" style="left:10px;bottom:30px">You lurk,<br>browse, consume</span>
+        <span class="quad-hint" style="right:10px;bottom:30px;text-align:right">You access info<br>and move on</span>
+      </div>
+    </div>
+
+    <div class="insight-panel" id="mapInsight">
+      <h4>What your map is revealing</h4>
+      <div id="mapInsightText"></div>
+      <button class="next-btn" onclick="switchTab(1)">Next: Time audit →</button>
+    </div>
+  </div>
+
+  <!-- ===== ACTIVITY 2 ===== -->
+  <div id="screen1" class="screen">
+    <span class="activity-label">Activity 2 of 3</span>
+    <h2 class="activity-title">Your time audit</h2>
+    <p class="activity-desc">Move the sliders to reflect your honest daily platform use. Don't open your screen time settings — just estimate. Your gut feeling is part of the data.</p>
+
+    <div id="sliderArea"></div>
+
+    <hr class="divider">
+
+    <div class="stats-grid" id="auditStats">
+      <div class="stat-card"><div class="stat-num" id="s-daily">0h</div><div class="stat-lbl">Per day</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-weekly">0h</div><div class="stat-lbl">Per week</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-top">—</div><div class="stat-lbl">Top platform</div></div>
+    </div>
+
+    <div class="audit-insight">
+      <h4>Reading your numbers</h4>
+      <p id="auditMsg">Adjust the sliders above to see your insights.</p>
+    </div>
+
+    <button class="next-btn" style="margin-top:1rem" onclick="switchTab(2)">Next: Who am I online? →</button>
+  </div>
+
+  <!-- ===== ACTIVITY 3 ===== -->
+  <div id="screen2" class="screen">
+    <span class="activity-label">Activity 3 of 3</span>
+    <h2 class="activity-title">Who am I online?</h2>
+    <p class="activity-desc">Tap everything that feels true for you. There are no wrong combinations — the more honest you are, the more interesting your result.</p>
+
+    <div class="check-section">
+      <p class="check-section-label">When I post something, I am usually...</p>
+      <div id="motives"></div>
+    </div>
+    <div class="check-section">
+      <p class="check-section-label">My relationship with platforms feels...</p>
+      <div id="feelings"></div>
+    </div>
+    <div class="check-section">
+      <p class="check-section-label">I am aware that platforms...</p>
+      <div id="awareness"></div>
+    </div>
+
+    <button class="gen-btn" id="genBtn" onclick="generateProfile()">Reveal my platform personality →</button>
+
+    <div class="profile-result" id="profileResult">
+      <p class="profile-type">Your platform personality</p>
+      <h3 class="profile-name" id="profileName"></h3>
+      <p class="profile-body" id="profileBody"></p>
+      <p class="profile-connect" id="profileConnect"></p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const platforms = [
+  {n:'Instagram', bg:'#F4C0D1', tx:'#72243E', bd:'#D4537E'},
+  {n:'TikTok',    bg:'#CECBF6', tx:'#3C3489', bd:'#7F77DD'},
+  {n:'YouTube',   bg:'#F5C4B3', tx:'#712B13', bd:'#D85A30'},
+  {n:'Facebook',  bg:'#B5D4F4', tx:'#0C447C', bd:'#378ADD'},
+  {n:'X / Twitter',bg:'#D3D1C7',tx:'#444441', bd:'#888780'},
+  {n:'Snapchat',  bg:'#C0DD97', tx:'#27500A', bd:'#639922'},
+  {n:'LinkedIn',  bg:'#85B7EB', tx:'#0C447C', bd:'#378ADD'},
+  {n:'Reddit',    bg:'#F0997B', tx:'#712B13', bd:'#D85A30'},
+  {n:'Discord',   bg:'#AFA9EC', tx:'#3C3489', bd:'#7F77DD'},
+  {n:'WhatsApp',  bg:'#9FE1CB', tx:'#085041', bd:'#1D9E75'},
+  {n:'Pinterest', bg:'#ED93B1', tx:'#72243E', bd:'#D4537E'},
+  {n:'Threads',   bg:'#B4B2A9', tx:'#444441', bd:'#888780'},
+];
+
+const tray = document.getElementById('tray');
+const mapArea = document.getElementById('mapArea');
+let dragging = null, offX = 0, offY = 0;
+const placed = {};
+
+platforms.forEach(p => {
+  const c = makeChip(p);
+  c.dataset.inTray = '1';
+  c.style.cssText += 'position:relative;transform:none;';
+  tray.appendChild(c);
+});
+
+function makeChip(p) {
+  const c = document.createElement('div');
+  c.className = 'chip';
+  c.textContent = p.n;
+  c.dataset.name = p.n;
+  c.style.background = p.bg;
+  c.style.color = p.tx;
+  c.style.borderColor = p.bd;
+  c.addEventListener('mousedown', startDrag);
+  c.addEventListener('touchstart', startDragTouch, {passive: false});
+  return c;
+}
+
+function startDrag(e) {
+  dragging = e.currentTarget;
+  const r = dragging.getBoundingClientRect();
+  offX = e.clientX - r.left - r.width / 2;
+  offY = e.clientY - r.top - r.height / 2;
+  lift(e.clientX, e.clientY);
+  e.preventDefault();
+}
+function startDragTouch(e) {
+  const t = e.touches[0];
+  dragging = e.currentTarget;
+  const r = dragging.getBoundingClientRect();
+  offX = t.clientX - r.left - r.width / 2;
+  offY = t.clientY - r.top - r.height / 2;
+  lift(t.clientX, t.clientY);
+  e.preventDefault();
+}
+function lift(cx, cy) {
+  document.body.appendChild(dragging);
+  dragging.style.cssText = `background:${getProp(dragging.dataset.name,'bg')};color:${getProp(dragging.dataset.name,'tx')};border-color:${getProp(dragging.dataset.name,'bd')};position:fixed;z-index:9999;cursor:grabbing;pointer-events:none;transform:translate(-50%,-50%);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;border:0.5px solid;white-space:nowrap;`;
+  move(cx, cy);
+}
+function move(cx, cy) {
+  if (!dragging) return;
+  dragging.style.left = (cx - offX) + 'px';
+  dragging.style.top  = (cy - offY) + 'px';
+}
+function getProp(name, which) {
+  const p = platforms.find(p => p.n === name);
+  return p ? p[which] : '';
+}
+document.addEventListener('mousemove', e => { if (dragging) move(e.clientX, e.clientY); });
+document.addEventListener('touchmove', e => { if (dragging) { const t = e.touches[0]; move(t.clientX, t.clientY); } }, {passive: true});
+document.addEventListener('mouseup',  e => drop(e.clientX, e.clientY));
+document.addEventListener('touchend', e => { if (dragging) { const t = e.changedTouches[0]; drop(t.clientX, t.clientY); } });
+
+function drop(cx, cy) {
+  if (!dragging) return;
+  const mr = mapArea.getBoundingClientRect();
+  const inMap = cx >= mr.left && cx <= mr.right && cy >= mr.top && cy <= mr.bottom;
+  const name = dragging.dataset.name;
+  const p = platforms.find(p => p.n === name);
+
+  if (inMap) {
+    const px = Math.round(((cx - mr.left) / mr.width) * 100);
+    const py = Math.round(((cy - mr.top) / mr.height) * 100);
+    dragging.dataset.px = px;
+    dragging.dataset.py = py;
+    dragging.dataset.inTray = '0';
+    dragging.className = 'chip on-map';
+    dragging.style.cssText = `background:${p.bg};color:${p.tx};border-color:${p.bd};position:absolute;left:${px}%;top:${py}%;transform:translate(-50%,-50%);cursor:grab;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;border:0.5px solid;white-space:nowrap;`;
+    mapArea.querySelector('.map-inner').appendChild(dragging);
+    dragging.addEventListener('mousedown', startDrag);
+    dragging.addEventListener('touchstart', startDragTouch, {passive: false});
+    placed[name] = {x: px, y: py};
+    updateMapInsight();
+  } else {
+    dragging.className = 'chip';
+    dragging.style.cssText = `background:${p.bg};color:${p.tx};border-color:${p.bd};position:relative;transform:none;cursor:grab;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;border:0.5px solid;white-space:nowrap;`;
+    dragging.dataset.inTray = '1';
+    tray.appendChild(dragging);
+    delete placed[name];
+    updateMapInsight();
+  }
+  dragging = null;
+}
+
+function updateMapInsight() {
+  const keys = Object.keys(placed);
+  if (keys.length < 3) return;
+  const box = document.getElementById('mapInsight');
+  const txt = document.getElementById('mapInsightText');
+  box.classList.add('show');
+  const residents     = keys.filter(k => placed[k].y < 45);
+  const visitors      = keys.filter(k => placed[k].y >= 55);
+  const personal      = keys.filter(k => placed[k].x < 45);
+  const institutional = keys.filter(k => placed[k].x >= 55);
+  let html = '';
+  if (residents.length > visitors.length) {
+    html += '<p>You tend to be a <strong style="font-weight:500">Resident</strong> on most platforms — you build presence, leave traces, and invest in an online identity. David White\'s framework suggests this means you have more at stake when platforms change their algorithms or policies.</p>';
+  } else if (visitors.length > residents.length) {
+    html += '<p>You tend to be a <strong style="font-weight:500">Visitor</strong> — you come in, take what you need, and leave. This can feel like staying under the radar, but remember from Week 5: your scrolling still generates data even without posting.</p>';
+  } else {
+    html += '<p>Your use is <strong style="font-weight:500">mixed</strong> across Resident and Visitor modes. Notice which platforms you inhabit vs which you pass through — and whether that reflects a conscious choice or a platform design choice.</p>';
+  }
+  if (personal.length > 0 && institutional.length > 0) {
+    html += '<p>You use platforms across both <strong style="font-weight:500">personal and institutional</strong> contexts. Does your sense of identity shift between them? Week 1\'s intersectionality framework suggests the same person can be represented very differently depending on the platform.</p>';
+  }
+  if (personal.length === 0 && institutional.length > 2) {
+    html += '<p>Your platform use skews almost entirely <strong style="font-weight:500">institutional</strong>. Even LinkedIn and Google Classroom are profit-driven attention economies — worth considering as we move into Week 9\'s surveillance capitalism content.</p>';
+  }
+  txt.innerHTML = html;
+}
+
+/* ---- Activity 2: Sliders ---- */
+const sliderPlatforms = ['Instagram','TikTok','YouTube','WhatsApp','X / Twitter','LinkedIn','Reddit','Discord'];
+const sliderVals = {};
+const sliderArea = document.getElementById('sliderArea');
+
+sliderPlatforms.forEach(name => {
+  sliderVals[name] = 20;
+  const block = document.createElement('div');
+  block.className = 'slider-block';
+  block.innerHTML = `
+    <div class="slider-meta">
+      <span class="slider-name">${name}</span>
+      <span class="slider-val" id="sv_${name.replace(/[^a-z]/gi,'_')}">20 min/day</span>
+    </div>
+    <input type="range" min="0" max="240" value="20" step="5" data-plat="${name}">
+  `;
+  block.querySelector('input').addEventListener('input', function() {
+    const v = parseInt(this.value);
+    sliderVals[name] = v;
+    const id = 'sv_' + name.replace(/[^a-z]/gi,'_');
+    document.getElementById(id).textContent = v === 0 ? 'none' : v >= 60 ? (Math.round(v/6)/10) + 'h/day' : v + ' min/day';
+    updateAudit();
+  });
+  sliderArea.appendChild(block);
+});
+
+function updateAudit() {
+  const total = Object.values(sliderVals).reduce((a,b)=>a+b, 0);
+  const dailyH = Math.round(total / 6) / 10;
+  const weekH  = Math.round(dailyH * 7 * 10) / 10;
+  const top    = Object.entries(sliderVals).sort((a,b) => b[1]-a[1])[0];
+  document.getElementById('s-daily').textContent  = dailyH + 'h';
+  document.getElementById('s-weekly').textContent = weekH + 'h';
+  document.getElementById('s-top').textContent    = total > 0 ? top[0].split(' ')[0] : '—';
+  let msg = '';
+  if (total === 0) {
+    msg = 'Move the sliders to see your insights.';
+  } else if (total < 60) {
+    msg = `You report ${total} minutes a day — relatively light use. Consider whether passive moments count: background YouTube, checking WhatsApp mid-lecture, or opening Instagram from habit. Even brief, unconscious sessions generate data for platform capitalism (Week 2).`;
+  } else if (total < 180) {
+    msg = `About ${dailyH} hours a day — close to the global average of 2–3 hours. That's ${weekH} hours a week, or roughly ${Math.round(weekH * 52 / 10) * 10} hours a year. The Week 3 alienation reading by Kassem Sarrah is relevant here: who is profiting from that time, and what are you getting in return?`;
+  } else {
+    msg = `${dailyH} hours daily is significant — ${weekH} hours a week. Research consistently finds people underestimate their own platform use by 30–50%, which would put your real figure closer to ${Math.round(dailyH * 1.4 * 10) / 10}h. Platforms are designed to produce exactly this level of engagement — it's not accidental (Week 2 enshittification reading).`;
+  }
+  document.getElementById('auditMsg').textContent = msg;
+}
+updateAudit();
+
+/* ---- Activity 3: Checks ---- */
+const motiveItems = [
+  'Sharing something I made or thought',
+  'Seeking connection or validation',
+  'Performing a version of myself',
+  'Documenting my life',
+  'Building an audience or reputation',
+  'Just filling time or boredom',
+  'Staying relevant to a group or community',
+  'I rarely post — I mainly scroll',
+];
+const feelingItems = [
+  'Energised and connected',
+  'Drained or anxious afterwards',
+  'Neutral — it\'s just a tool',
+  'Conflicted — I enjoy it but feel uneasy',
+  'Surveilled or tracked',
+  'Like I can\'t opt out even if I wanted to',
+  'Seen and represented',
+  'Invisible or misrepresented',
+];
+const awarenessItems = [
+  'Collect and sell my data to advertisers',
+  'Are designed to keep me scrolling longer',
+  'Amplify certain identities over others',
+  'Benefit commercially from my content and labour',
+  'Shape what I see more than I shape it',
+  'Treat me as a product, not a person',
+  'Can also be tools for community and resistance',
+  'Affect different people very differently',
+];
+const mState={}, fState={}, aState={};
+
+function buildChecks(id, items, state) {
+  const el = document.getElementById(id);
+  items.forEach(text => {
+    state[text] = false;
+    const row = document.createElement('div');
+    row.className = 'check-item';
+    row.innerHTML = `<div class="check-box"></div><span class="check-text">${text}</span>`;
+    row.addEventListener('click', () => {
+      state[text] = !state[text];
+      row.classList.toggle('on', state[text]);
+    });
+    el.appendChild(row);
+  });
+}
+buildChecks('motives', motiveItems, mState);
+buildChecks('feelings', feelingItems, fState);
+buildChecks('awareness', awarenessItems, aState);
+
+function generateProfile() {
+  const m = Object.entries(mState).filter(e=>e[1]).map(e=>e[0]);
+  const f = Object.entries(fState).filter(e=>e[1]).map(e=>e[0]);
+  const a = Object.entries(aState).filter(e=>e[1]).map(e=>e[0]);
+  if (m.length + f.length + a.length < 3) {
+    alert('Tap a few more options first — the more honest you are, the better your result.');
+    return;
+  }
+  const critical   = a.length >= 4;
+  const ambivalent = f.includes("Conflicted — I enjoy it but feel uneasy") || f.includes("Drained or anxious afterwards");
+  const performer  = m.includes("Performing a version of myself") || m.includes("Building an audience or reputation");
+  const lurker     = m.includes("I rarely post — I mainly scroll");
+  const surveilled = f.includes("Surveilled or tracked") || f.includes("Like I can't opt out even if I wanted to");
+  const marginalised = f.includes("Invisible or misrepresented");
+  const hopeful    = a.includes("Can also be tools for community and resistance");
+
+  let name='', body='', connect='';
+
+  if (critical && ambivalent) {
+    name = 'The Critical Ambivalent';
+    body = 'You understand a great deal about how platforms extract value from users — and that knowledge sits uneasily alongside the fact that you still use them. This is one of the most intellectually honest positions you can hold, and one of the hardest to act on. The gap between knowing and changing is real, and platforms are designed to keep it wide.';
+    connect = 'This tension is related to what theorists call the "value-action gap." It connects to Week 5\'s data colonialism argument — knowing you\'re being extracted from doesn\'t automatically give you the power to leave. Watch for this theme in Week 9\'s surveillance capitalism content.';
+  } else if (critical && hopeful) {
+    name = 'The Informed Optimist';
+    body = 'You have a clear-eyed understanding of how platforms operate, and you still believe in the possibility of using them differently or building alternatives. This combination is rarer than pure cynicism — and more generative.';
+    connect = 'Your awareness of platforms as potential tools of resistance connects directly to Week 11\'s guest lecture on alternative platforms. The Design Justice reading by Sasha Costanza-Chock will resonate with you.';
+  } else if (critical) {
+    name = 'The Informed Pragmatist';
+    body = 'You\'re analytically clear about platform mechanics and engage with platforms as tools rather than identities. You hold relatively neutral feelings about your use — which is itself a form of resistance, even if a quiet one.';
+    connect = 'Your level of platform awareness maps closely to Week 9\'s surveillance capitalism content. Zuboff\'s argument is that awareness is necessary — but that platforms specifically design for awareness to be insufficient on its own.';
+  } else if (marginalised) {
+    name = 'The Underrepresented User';
+    body = 'You feel invisible or misrepresented on platforms — and that experience is not incidental. Platforms were designed around particular identities and communities, and that design shapes who feels seen and who doesn\'t.';
+    connect = 'This connects directly to Week 1\'s Bronwyn Carlson reading, and to Week 7\'s upcoming content on automated racism. Your lived experience is actually one of the richest lenses through which to analyse platform design.';
+  } else if (performer) {
+    name = 'The Platform Native';
+    body = 'You actively build presence, share, and perform identity online. Platforms feel like a natural extension of social life. You may not experience them primarily as extractive — but the Week 3 alienation reading suggests your creative labour is generating substantial value for platform owners.';
+    connect = 'Week 4\'s platformization of cultural production reading by Nieborg and Poell asks: what does it mean that your self-expression is also someone else\'s commodity? This will be directly relevant to your experience.';
+  } else if (lurker) {
+    name = 'The Shadow Resident';
+    body = 'You consume far more than you produce — which can feel like staying under the radar. But platforms count your scrolling, your pauses, your replays. Visitor behaviour still generates Resident-level data extraction, even without a single post.';
+    connect = 'This connects to Week 5\'s data colonialism argument: extraction doesn\'t require your active participation. Your attention alone is the resource. Week 9\'s surveillance capitalism content will make this very concrete.';
+  } else if (surveilled && ambivalent) {
+    name = 'The Reluctant User';
+    body = 'You feel the pull of platform dependency — the sense that opting out isn\'t really a choice. This feeling is not accidental. It\'s a designed outcome. Platforms that have successfully enshittified make exit feel socially and practically impossible.';
+    connect = 'Week 2\'s enshittification reading by Cory Doctorow directly explains your experience. Week 11\'s alternative platforms content will be important for you — it addresses what \'exit\' might actually look like.';
+  } else {
+    name = 'The Social Connector';
+    body = 'Your platform use is primarily about connection and community — keeping in touch, staying close, being part of things. This is one of the most human reasons to use platforms, and also one of the most effectively monetised. Your relationships are part of the product.';
+    connect = 'The upcoming Week 7 reading on automated racism and Week 8 on gender and platforms will examine how relational spaces are shaped by design choices you may not have noticed yet. They\'re worth reading with your social use in mind.';
+  }
+
+  document.getElementById('profileName').textContent = name;
+  document.getElementById('profileBody').textContent = body;
+  document.getElementById('profileConnect').textContent = connect;
+  document.getElementById('profileResult').classList.add('show');
+  document.getElementById('genBtn').style.display = 'none';
+  document.getElementById('profileResult').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function switchTab(i) {
+  document.querySelectorAll('.tab-btn').forEach((b,j) => b.classList.toggle('active', i===j));
+  document.querySelectorAll('.screen').forEach((s,j) => s.classList.toggle('active', i===j));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
